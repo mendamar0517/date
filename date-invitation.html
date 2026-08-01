@@ -1,0 +1,2502 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1"
+    />
+    <title>Will you go on a date with me? ❤️</title>
+
+    <!-- ===== External libs (CDN) ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+      /* ============================================================
+   DESIGN TOKENS — "Moonlit Orchard"
+   A dusk-lit garden: dusty rose + antique cream by day,
+   deep plum-navy sky by night, with a warm rose-gold thread
+   running through both. Signature element: the hand-drawn
+   "constellation" line that connects every step on the
+   treasure map, like stars being traced into a shape.
+   ============================================================ */
+      :root {
+        --cream: #fbf4ec;
+        --cream-2: #f3e7da;
+        --rose: #e8a6a0;
+        --rose-deep: #c9787b;
+        --plum: #4a2e3b;
+        --gold: #c9a15a;
+        --gold-soft: #e4c892;
+        --ink: #3a2a2e;
+        --white: #fffdfb;
+        --glass: rgba(255, 253, 251, 0.55);
+        --glass-border: rgba(255, 255, 255, 0.6);
+        --shadow: 0 20px 60px rgba(74, 46, 59, 0.18);
+        --radius: 26px;
+        --font-display: "Cormorant Garamond", "Playfair Display", serif;
+        --font-body: "Manrope", system-ui, sans-serif;
+        --font-script: "Caveat", cursive;
+      }
+      [data-theme="dark"] {
+        --cream: #241726;
+        --cream-2: #2e1b2e;
+        --rose: #c9787b;
+        --rose-deep: #e8a6a0;
+        --plum: #f3e7da;
+        --gold: #e4c892;
+        --gold-soft: #c9a15a;
+        --ink: #f3e7da;
+        --white: #2e1b2e;
+        --glass: rgba(46, 27, 46, 0.55);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      }
+      @font-face {
+        font-family: "sysfallback";
+        src: local("Georgia");
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: var(--font-body);
+        color: var(--ink);
+        background:
+          radial-gradient(
+            1200px 700px at 15% -10%,
+            var(--cream-2),
+            transparent 60%
+          ),
+          radial-gradient(
+            1000px 800px at 110% 10%,
+            var(--rose) 0%,
+            transparent 45%
+          ),
+          linear-gradient(180deg, var(--cream), var(--cream-2));
+        min-height: 100vh;
+        overflow-x: hidden;
+        transition:
+          background 0.6s ease,
+          color 0.4s ease;
+        cursor: default;
+      }
+      @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700;800&family=Caveat:wght@500;700&display=swap");
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--font-display);
+        font-weight: 600;
+        margin: 0;
+        color: var(--ink);
+      }
+      p {
+        line-height: 1.6;
+      }
+      .script {
+        font-family: var(--font-script);
+        color: var(--rose-deep);
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+      }
+      a {
+        color: inherit;
+      }
+
+      ::selection {
+        background: var(--rose);
+        color: var(--white);
+      }
+
+      /* ---------- app shell ---------- */
+      #app {
+        position: relative;
+        width: 100%;
+        min-height: 100vh;
+      }
+      .screen {
+        display: none;
+        min-height: 100vh;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        padding: 32px 20px 90px;
+        position: relative;
+      }
+      .screen.active {
+        display: flex;
+      }
+      body.has-progress .screen {
+        padding-top: 118px;
+      }
+
+      /* ---------- floating hearts / stars background ---------- */
+      #bgfx {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1;
+        overflow: hidden;
+      }
+      .floaty {
+        position: absolute;
+        opacity: 0;
+        animation: floatUp linear infinite;
+      }
+      @keyframes floatUp {
+        0% {
+          transform: translateY(110vh) rotate(0deg) scale(var(--s, 1));
+          opacity: 0;
+        }
+        8% {
+          opacity: 0.85;
+        }
+        92% {
+          opacity: 0.6;
+        }
+        100% {
+          transform: translateY(-15vh) rotate(360deg) scale(var(--s, 1));
+          opacity: 0;
+        }
+      }
+      .star {
+        position: absolute;
+        background: var(--gold-soft);
+        border-radius: 50%;
+        animation: twinkle 3.5s ease-in-out infinite;
+      }
+      @keyframes twinkle {
+        0%,
+        100% {
+          opacity: 0.15;
+        }
+        50% {
+          opacity: 0.9;
+        }
+      }
+
+      /* ---------- top bar controls ---------- */
+      .topbar {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 50;
+        display: flex;
+        gap: 10px;
+      }
+      .pill-btn {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: var(--glass);
+        backdrop-filter: blur(14px);
+        border: 1px solid var(--glass-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 19px;
+        box-shadow: var(--shadow);
+        transition: transform 0.25s ease;
+      }
+      .pill-btn:hover {
+        transform: scale(1.08) rotate(-4deg);
+      }
+      .pill-btn:active {
+        transform: scale(0.92);
+      }
+
+      /* ---------- treasure map progress ---------- */
+      #progressWrap {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 40;
+        display: none;
+        justify-content: center;
+        padding: 16px 14px 0;
+        pointer-events: none;
+      }
+      #progressWrap.show {
+        display: flex;
+      }
+      .progress-track {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        background: var(--glass);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 999px;
+        padding: 10px 18px;
+        box-shadow: var(--shadow);
+        pointer-events: auto;
+        max-width: 96vw;
+        overflow-x: auto;
+      }
+      .p-node {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 52px;
+        position: relative;
+      }
+      .p-dot {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: var(--white);
+        border: 2px solid var(--rose);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+        z-index: 2;
+      }
+      .p-node.done .p-dot {
+        background: linear-gradient(135deg, var(--rose), var(--gold));
+        border-color: transparent;
+        transform: scale(1.08);
+        box-shadow: 0 0 0 4px rgba(201, 161, 90, 0.25);
+      }
+      .p-node.current .p-dot {
+        animation: pulseDot 1.6s ease-in-out infinite;
+      }
+      @keyframes pulseDot {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(201, 161, 90, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 0 8px rgba(201, 161, 90, 0);
+        }
+      }
+      .p-label {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        color: var(--ink);
+        opacity: 0.75;
+        white-space: nowrap;
+      }
+      .p-line {
+        width: 26px;
+        height: 2px;
+        background: var(--rose);
+        opacity: 0.35;
+        margin: 0 -2px;
+        position: relative;
+        top: -13px;
+        z-index: 1;
+      }
+      .p-node.done + .p-line,
+      .p-line.done {
+        background: linear-gradient(90deg, var(--rose), var(--gold));
+        opacity: 1;
+      }
+
+      /* ---------- glass card ---------- */
+      .glass-card {
+        background: var(--glass);
+        backdrop-filter: blur(18px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 38px 34px;
+      }
+      .content-max {
+        width: 100%;
+        max-width: 760px;
+      }
+
+      /* ---------- hero ---------- */
+      #hero-inner {
+        text-align: center;
+        max-width: 640px;
+      }
+      .eyebrow {
+        font-family: var(--font-body);
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--rose-deep);
+        margin-bottom: 14px;
+        display: inline-block;
+      }
+      .hero-title {
+        font-size: clamp(2.4rem, 7vw, 4.2rem);
+        line-height: 1.08;
+        margin-bottom: 18px;
+      }
+      .hero-title .heart {
+        display: inline-block;
+        animation: heartbeat 1.4s ease-in-out infinite;
+      }
+      @keyframes heartbeat {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        15% {
+          transform: scale(1.25);
+        }
+        30% {
+          transform: scale(1);
+        }
+        45% {
+          transform: scale(1.18);
+        }
+        60% {
+          transform: scale(1);
+        }
+      }
+      .hero-sub {
+        font-size: clamp(1rem, 2.4vw, 1.25rem);
+        color: var(--ink);
+        opacity: 0.8;
+        margin-bottom: 44px;
+        font-weight: 500;
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 22px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        position: relative;
+        min-height: 80px;
+      }
+      .btn-yes {
+        padding: 18px 46px;
+        border-radius: 999px;
+        font-size: 1.15rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--rose), var(--rose-deep));
+        color: var(--white);
+        box-shadow: 0 14px 34px rgba(201, 120, 123, 0.45);
+        transition:
+          transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+          box-shadow 0.25s;
+        position: relative;
+        overflow: hidden;
+      }
+      .btn-yes:hover {
+        transform: translateY(-3px) scale(1.04);
+        box-shadow: 0 18px 42px rgba(201, 120, 123, 0.55);
+      }
+      .btn-yes:active {
+        transform: scale(0.96);
+      }
+      .btn-no {
+        padding: 18px 40px;
+        border-radius: 999px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        background: var(--white);
+        color: var(--ink);
+        border: 2px solid var(--rose);
+        position: fixed;
+        z-index: 60;
+        transition:
+          top 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+          left 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: var(--shadow);
+      }
+      .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.55);
+        transform: scale(0);
+        animation: rippleAnim 0.6s ease-out;
+      }
+      @keyframes rippleAnim {
+        to {
+          transform: scale(3.2);
+          opacity: 0;
+        }
+      }
+      #noMsg {
+        position: fixed;
+        z-index: 59;
+        padding: 8px 16px;
+        border-radius: 14px;
+        background: var(--plum);
+        color: var(--cream);
+        font-size: 13px;
+        font-weight: 600;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.25s ease,
+          transform 0.25s ease;
+        transform: translateY(6px);
+        white-space: nowrap;
+        box-shadow: var(--shadow);
+      }
+      #noMsg.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* ---------- celebration ---------- */
+      #celebration {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        background: radial-gradient(
+          circle at 50% 40%,
+          rgba(232, 166, 160, 0.55),
+          rgba(74, 46, 59, 0.85)
+        );
+        backdrop-filter: blur(6px);
+      }
+      #celebration.show {
+        display: flex;
+      }
+      .flash {
+        position: fixed;
+        inset: 0;
+        background: #fff;
+        z-index: 99;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .flash.go {
+        animation: flashAnim 0.5s ease-out;
+      }
+      @keyframes flashAnim {
+        0% {
+          opacity: 0;
+        }
+        12% {
+          opacity: 0.9;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+      .cele-heart {
+        font-size: 5rem;
+        animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes popIn {
+        0% {
+          transform: scale(0) rotate(-20deg);
+          opacity: 0;
+        }
+        70% {
+          transform: scale(1.15) rotate(6deg);
+        }
+        100% {
+          transform: scale(1) rotate(0);
+          opacity: 1;
+        }
+      }
+      .cele-text {
+        color: #fff;
+        font-size: clamp(1.8rem, 5vw, 2.8rem);
+        margin-top: 18px;
+        text-align: center;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      }
+
+      /* ---------- envelope ---------- */
+      .envelope-wrap {
+        perspective: 1400px;
+      }
+      .envelope {
+        width: min(420px, 86vw);
+        height: 320px;
+        position: relative;
+        margin: 0 auto 30px;
+        cursor: pointer;
+        overflow: hidden;
+        border-radius: 14px;
+      }
+      .env-back {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, var(--rose-deep), var(--rose));
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        z-index: 1;
+      }
+      .env-letter {
+        position: absolute;
+        left: 6%;
+        right: 6%;
+        top: 12%;
+        height: 76%;
+        background: var(--white);
+        border-radius: 8px;
+        box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.15);
+        transform: translateY(55%);
+        opacity: 0;
+        transition:
+          transform 1s cubic-bezier(0.22, 1, 0.36, 1),
+          opacity 0.7s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        text-align: center;
+        font-family: var(--font-script);
+        font-size: 1.05rem;
+        line-height: 1.4;
+        color: var(--ink);
+        z-index: 2;
+        overflow-y: auto;
+      }
+      .env-letter p {
+        margin: 0 0 8px;
+      }
+      .envelope.open .env-letter {
+        transform: translateY(0%);
+        opacity: 1;
+      }
+      .env-flap {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 52%;
+        background: linear-gradient(160deg, var(--rose), var(--rose-deep));
+        clip-path: polygon(0 0, 100% 0, 50% 100%);
+        transform-origin: top center;
+        transition:
+          transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+          opacity 0.5s ease 0.3s;
+        z-index: 3;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+        backface-visibility: hidden;
+      }
+      .envelope.open .env-flap {
+        transform: rotateX(180deg);
+        opacity: 0;
+      }
+      .env-seal {
+        position: absolute;
+        top: 38%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: var(--gold);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        z-index: 4;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        transition: opacity 0.4s ease;
+      }
+      .envelope.open .env-seal {
+        opacity: 0;
+      }
+      .hint {
+        font-size: 13px;
+        opacity: 0.6;
+        text-align: center;
+        margin-top: 6px;
+        font-weight: 600;
+      }
+
+      /* ---------- step layout ---------- */
+      .step-head {
+        text-align: center;
+        margin-bottom: 34px;
+      }
+      .step-title {
+        font-size: clamp(1.6rem, 4.2vw, 2.3rem);
+        margin-bottom: 8px;
+      }
+      .step-note {
+        opacity: 0.7;
+        font-size: 0.95rem;
+      }
+
+      /* choice grids */
+      .grid {
+        display: grid;
+        gap: 18px;
+        width: 100%;
+      }
+      .grid.g5 {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      }
+      .grid.g3 {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      }
+      .grid.g4 {
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      }
+
+      .choice-card {
+        background: var(--white);
+        border-radius: 20px;
+        border: 2px solid transparent;
+        padding: 22px 14px;
+        text-align: center;
+        box-shadow: 0 8px 24px rgba(74, 46, 59, 0.1);
+        transition:
+          transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+          border-color 0.25s,
+          box-shadow 0.3s;
+        position: relative;
+        overflow: hidden;
+      }
+      .choice-card:hover {
+        transform: translateY(-6px) scale(1.03);
+        box-shadow: 0 16px 34px rgba(74, 46, 59, 0.18);
+      }
+      .choice-card.selected {
+        border-color: var(--gold);
+        background: linear-gradient(160deg, var(--cream), var(--cream-2));
+      }
+      .choice-card.selected::after {
+        content: "✓";
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--gold);
+        color: #fff;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .card-emoji {
+        font-size: 2.6rem;
+        margin-bottom: 10px;
+        display: block;
+      }
+      .card-flag {
+        font-size: 1.9rem;
+        margin-bottom: 8px;
+        display: block;
+      }
+      .card-title {
+        font-weight: 800;
+        font-size: 1.02rem;
+        margin-bottom: 4px;
+      }
+      .card-sub {
+        font-size: 0.8rem;
+        opacity: 0.65;
+      }
+
+      /* movie cards */
+      .movie-card {
+        background: var(--white);
+        border-radius: 22px;
+        overflow: hidden;
+        border: 2px solid transparent;
+        box-shadow: 0 10px 28px rgba(74, 46, 59, 0.12);
+        transition:
+          transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+          border-color 0.25s;
+        cursor: pointer;
+      }
+      .movie-card:hover {
+        transform: translateY(-6px);
+      }
+      .movie-card.selected {
+        border-color: var(--gold);
+      }
+      .poster {
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        font-family: var(--font-display);
+        font-size: 1.35rem;
+        color: #fff;
+        text-align: center;
+        padding: 14px;
+        background-size: cover;
+      }
+      .poster.p1 {
+        background: linear-gradient(160deg, #1a2740, #3a2e1f, #0e1522);
+      }
+      .poster.p2 {
+        background: linear-gradient(160deg, #7a1220, #1c1c2e, #c0392b);
+      }
+      .poster.p3 {
+        background: linear-gradient(160deg, #f2b3c5, #8ec5d6, #f7e07a);
+      }
+      .poster-glow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at 50% 30%,
+          rgba(255, 255, 255, 0.18),
+          transparent 60%
+        );
+      }
+      .movie-body {
+        padding: 16px 18px 20px;
+      }
+      .movie-name {
+        font-weight: 800;
+        font-size: 1.08rem;
+        margin-bottom: 4px;
+      }
+      .movie-meta {
+        font-size: 0.76rem;
+        opacity: 0.6;
+        margin-bottom: 8px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+      }
+      .movie-desc {
+        font-size: 0.85rem;
+        opacity: 0.78;
+        margin-bottom: 12px;
+        line-height: 1.5;
+      }
+      .trailer-btn {
+        font-size: 0.8rem;
+        font-weight: 800;
+        padding: 9px 16px;
+        border-radius: 999px;
+        background: var(--cream-2);
+        color: var(--ink);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: background 0.2s;
+      }
+      .trailer-btn:hover {
+        background: var(--rose);
+        color: #fff;
+      }
+
+      /* modal */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(20, 10, 15, 0.72);
+        backdrop-filter: blur(6px);
+        z-index: 200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .modal-overlay.show {
+        display: flex;
+      }
+      .modal-box {
+        width: min(760px, 94vw);
+        background: #000;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        position: relative;
+      }
+      .modal-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 5;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-box iframe {
+        width: 100%;
+        aspect-ratio: 16/9;
+        display: block;
+        border: 0;
+      }
+
+      /* time pills */
+      .time-grid {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .time-pill {
+        padding: 16px 26px;
+        border-radius: 18px;
+        background: var(--white);
+        font-weight: 800;
+        font-size: 1.1rem;
+        border: 2px solid transparent;
+        box-shadow: 0 8px 20px rgba(74, 46, 59, 0.1);
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .time-pill:hover {
+        transform: translateY(-4px);
+      }
+      .time-pill.selected {
+        border-color: var(--gold);
+        background: linear-gradient(160deg, var(--cream), var(--cream-2));
+        transform: scale(1.05);
+      }
+      .meet-box {
+        margin-top: 26px;
+        text-align: center;
+        padding: 20px 26px;
+        border-radius: 18px;
+        background: linear-gradient(
+          135deg,
+          rgba(232, 166, 160, 0.25),
+          rgba(201, 161, 90, 0.2)
+        );
+        border: 1px dashed var(--rose-deep);
+        max-width: 460px;
+      }
+      .meet-time {
+        font-family: var(--font-display);
+        font-size: 1.8rem;
+        color: var(--rose-deep);
+        margin-top: 4px;
+      }
+
+      /* dress color */
+      .color-card {
+        border-radius: 20px;
+        padding: 20px 10px;
+        text-align: center;
+        background: var(--white);
+        border: 2px solid transparent;
+        box-shadow: 0 8px 22px rgba(74, 46, 59, 0.1);
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .color-card:hover {
+        transform: translateY(-5px);
+      }
+      .color-card.selected {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 6px rgba(201, 161, 90, 0.18);
+      }
+      .swatch {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        margin: 0 auto 10px;
+        border: 3px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      /* nav buttons */
+      .nav-row {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        margin-top: 38px;
+        flex-wrap: wrap;
+      }
+      .btn-primary,
+      .btn-ghost {
+        padding: 15px 34px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 0.98rem;
+        transition:
+          transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+          box-shadow 0.25s;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--rose), var(--rose-deep));
+        color: #fff;
+        box-shadow: 0 12px 28px rgba(201, 120, 123, 0.4);
+      }
+      .btn-primary:hover {
+        transform: translateY(-3px);
+      }
+      .btn-primary:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink);
+        border: 2px solid var(--rose);
+        opacity: 0.8;
+      }
+      .btn-ghost:hover {
+        opacity: 1;
+        transform: translateY(-3px);
+      }
+      .btn-luck {
+        margin-top: 20px;
+        padding: 11px 22px;
+        border-radius: 999px;
+        background: var(--white);
+        border: 2px dashed var(--gold);
+        font-weight: 800;
+        font-size: 0.85rem;
+        color: var(--rose-deep);
+      }
+
+      /* wheel */
+      #wheelModal .modal-box {
+        background: var(--cream);
+        padding: 34px;
+        width: min(420px, 92vw);
+        text-align: center;
+      }
+      .wheel-wrap {
+        position: relative;
+        width: 260px;
+        height: 260px;
+        margin: 20px auto;
+      }
+      #wheelCanvas {
+        width: 100%;
+        height: 100%;
+        transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1);
+      }
+      .wheel-pointer {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 28px;
+        z-index: 5;
+      }
+
+      /* summary */
+      .summary-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 10px;
+      }
+      .sum-item {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 16px 18px;
+        box-shadow: 0 6px 18px rgba(74, 46, 59, 0.08);
+      }
+      .sum-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        opacity: 0.55;
+        font-weight: 800;
+      }
+      .sum-value {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        margin-top: 4px;
+      }
+
+      /* love meter */
+      .meter-wrap {
+        width: 100%;
+        max-width: 420px;
+        margin: 26px auto 6px;
+      }
+      .meter-track {
+        height: 20px;
+        border-radius: 999px;
+        background: var(--cream-2);
+        overflow: hidden;
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.08);
+      }
+      .meter-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--rose), var(--gold));
+        transition: width 2.2s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .meter-pct {
+        text-align: center;
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        margin-top: 10px;
+        color: var(--rose-deep);
+      }
+
+      /* polaroid */
+      .polaroid {
+        background: #fff;
+        padding: 16px 16px 50px;
+        width: min(300px, 80vw);
+        margin: 0 auto;
+        box-shadow: var(--shadow);
+        transform: rotate(-3deg);
+        border-radius: 4px;
+        position: relative;
+      }
+      .polaroid-photo {
+        aspect-ratio: 1/1;
+        border-radius: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(
+          135deg,
+          var(--rose),
+          var(--gold-soft),
+          var(--plum)
+        );
+        font-size: 3rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .polaroid-photo::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at 30% 20%,
+          rgba(255, 255, 255, 0.4),
+          transparent 60%
+        );
+      }
+      .polaroid-cap {
+        font-family: var(--font-script);
+        text-align: center;
+        margin-top: 14px;
+        font-size: 1.15rem;
+        color: var(--ink);
+      }
+      .polaroid-sub {
+        font-family: var(--font-script);
+        text-align: center;
+        font-size: 0.95rem;
+        color: var(--rose-deep);
+        margin-top: 2px;
+      }
+
+      /* ticket */
+      #ticketCapture {
+        background: var(--white);
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        width: min(480px, 92vw);
+        display: flex;
+        position: relative;
+        margin: 0 auto;
+      }
+      .ticket-main {
+        flex: 1;
+        padding: 26px 22px;
+        position: relative;
+      }
+      .ticket-main::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at 100% 0%,
+          rgba(232, 166, 160, 0.18),
+          transparent 55%
+        );
+        pointer-events: none;
+      }
+      .ticket-eyebrow {
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--rose-deep);
+      }
+      .ticket-title {
+        font-family: var(--font-display);
+        font-size: 1.7rem;
+        margin: 2px 0 14px;
+      }
+      .ticket-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.78rem;
+        padding: 7px 0;
+        border-bottom: 1px dashed rgba(74, 46, 59, 0.15);
+      }
+      .ticket-row b {
+        font-weight: 800;
+      }
+      .ticket-status {
+        margin-top: 14px;
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        background: linear-gradient(135deg, var(--rose), var(--gold));
+        color: #fff;
+      }
+      .ticket-stub {
+        width: 120px;
+        background: var(--cream-2);
+        border-left: 2px dashed rgba(74, 46, 59, 0.25);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 16px 10px;
+      }
+      .ticket-stub .qr {
+        background: #fff;
+        padding: 6px;
+        border-radius: 8px;
+      }
+      .stub-vert {
+        writing-mode: vertical-rl;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        opacity: 0.55;
+      }
+
+      /* loading screen */
+      #loading {
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        background: linear-gradient(160deg, var(--cream), var(--cream-2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        transition: opacity 0.6s ease;
+      }
+      .loader-heart {
+        font-size: 3.2rem;
+        animation: heartbeat 1s ease-in-out infinite;
+      }
+      .loader-text {
+        margin-top: 14px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        opacity: 0.7;
+        font-size: 0.85rem;
+      }
+
+      /* type animation */
+      .typed-line {
+        overflow: hidden;
+        white-space: nowrap;
+        border-right: 2px solid var(--rose-deep);
+        animation: blink 0.8s step-end infinite;
+      }
+      @keyframes blink {
+        50% {
+          border-color: transparent;
+        }
+      }
+
+      /* reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.001s !important;
+          transition-duration: 0.001s !important;
+        }
+      }
+
+      /* focus visibility */
+      a:focus-visible,
+      button:focus-visible,
+      .choice-card:focus-visible {
+        outline: 3px solid var(--gold);
+        outline-offset: 3px;
+      }
+
+      /* mobile */
+      @media (max-width: 640px) {
+        .glass-card {
+          padding: 26px 20px;
+        }
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+        #ticketCapture {
+          flex-direction: column;
+        }
+        .ticket-stub {
+          width: 100%;
+          flex-direction: row;
+          border-left: 0;
+          border-top: 2px dashed rgba(74, 46, 59, 0.25);
+        }
+        .stub-vert {
+          display: none;
+        }
+        .btn-no {
+          position: absolute;
+        }
+      }
+    </style>
+  </head>
+  <body data-theme="light">
+    <div id="loading">
+      <div class="loader-heart">❤️</div>
+      <div class="loader-text">preparing something special…</div>
+    </div>
+
+    <div id="bgfx"></div>
+    <div class="flash" id="flash"></div>
+
+    <div class="topbar">
+      <button
+        class="pill-btn"
+        id="muteBtn"
+        aria-label="Toggle music"
+        title="Toggle music"
+      >
+        🔊
+      </button>
+      <button
+        class="pill-btn"
+        id="themeBtn"
+        aria-label="Toggle dark mode"
+        title="Toggle dark mode"
+      >
+        🌙
+      </button>
+    </div>
+
+    <div id="progressWrap">
+      <div class="progress-track" id="progressTrack"></div>
+    </div>
+
+    <div id="app">
+      <!-- SCREEN 0 — HERO -->
+      <section class="screen active" id="screen-hero">
+        <div id="hero-inner">
+          <span class="eyebrow">a very important question</span>
+          <h1 class="hero-title">
+            Will you go on a date<br />with me? <span class="heart">❤️</span>
+          </h1>
+          <p class="hero-sub">I have planned something special just for us.</p>
+          <div class="btn-row">
+            <button class="btn-yes" id="yesBtn">❤️ YES</button>
+            <button class="btn-no" id="noBtn">🙈 NO</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 1 — LOVE LETTER -->
+      <section class="screen" id="screen-letter">
+        <div class="content-max" style="text-align: center">
+          <div class="envelope-wrap">
+            <div class="envelope" id="envelope">
+              <div class="env-back"></div>
+              <div class="env-letter">
+                <div>
+                  <p>This isn't just a normal date.</p>
+                  <p>
+                    It's a day I've been looking forward to sharing with you.
+                  </p>
+                  <p class="script" style="font-size: 1.4rem">
+                    Let's plan it together. ❤️
+                  </p>
+                </div>
+              </div>
+              <div class="env-flap"></div>
+              <div class="env-seal">❤️</div>
+            </div>
+          </div>
+          <p class="hint" id="envHint">tap the envelope to open it</p>
+          <div class="nav-row" id="letterNav" style="display: none">
+            <button class="btn-primary" id="toPlanBtn">
+              Let's plan our day →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2 — FOOD -->
+      <section class="screen" id="screen-food">
+        <div class="content-max">
+          <div class="step-head">
+            <h2 class="step-title">What should we eat before the movie?</h2>
+            <p class="step-note">pick whatever sounds most like us</p>
+          </div>
+          <div class="grid g5" id="foodGrid"></div>
+          <div>
+            <button class="btn-luck" id="foodLuckyBtn">
+              🎡 Can't decide? Spin the wheel
+            </button>
+          </div>
+          <div class="nav-row">
+            <button class="btn-primary" id="foodNext" disabled>
+              Continue →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3 — MOVIE -->
+      <section class="screen" id="screen-movie">
+        <div class="content-max">
+          <div class="step-head">
+            <h2 class="step-title">Which movie should we watch together?</h2>
+            <p class="step-note">tap a trailer if you want a sneak peek</p>
+          </div>
+          <div class="grid g3" id="movieGrid"></div>
+          <div>
+            <button class="btn-luck" id="movieLuckyBtn">
+              🎡 Can't decide? Spin the wheel
+            </button>
+          </div>
+          <div class="nav-row">
+            <button class="btn-ghost" id="movieBack">← Back</button>
+            <button class="btn-primary" id="movieNext" disabled>
+              Continue →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4 — TIME -->
+      <section class="screen" id="screen-time">
+        <div class="content-max" style="text-align: center">
+          <div class="step-head">
+            <h2 class="step-title">What time should we watch the movie?</h2>
+            <p class="step-note">
+              pick a showtime and I'll work out when to meet
+            </p>
+          </div>
+          <div class="time-grid" id="timeGrid"></div>
+          <div class="meet-box" id="meetBox" style="display: none">
+            <div style="font-size: 0.85rem; font-weight: 700; opacity: 0.7">
+              we should meet about 2 hours earlier, so we can enjoy dinner first
+            </div>
+            <div class="meet-time" id="meetTimeText"></div>
+          </div>
+          <div class="nav-row">
+            <button class="btn-ghost" id="timeBack">← Back</button>
+            <button class="btn-primary" id="timeNext" disabled>
+              Continue →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5 — DRESS CODE -->
+      <section class="screen" id="screen-dress">
+        <div class="content-max">
+          <div class="step-head">
+            <h2 class="step-title">Let's accidentally match our outfits ❤️</h2>
+            <p class="step-note">pick a color you might wear that day</p>
+          </div>
+          <div class="grid g4" id="dressGrid"></div>
+          <div class="nav-row">
+            <button class="btn-ghost" id="dressBack">← Back</button>
+            <button class="btn-primary" id="dressNext" disabled>
+              See our summary →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 6 — SUMMARY -->
+      <section class="screen" id="screen-summary">
+        <div class="content-max glass-card">
+          <div class="step-head">
+            <h2 class="step-title">Here's our day, all planned out</h2>
+          </div>
+          <div class="summary-grid" id="summaryGrid"></div>
+
+          <div class="meter-wrap">
+            <div class="meter-track">
+              <div class="meter-fill" id="meterFill"></div>
+            </div>
+            <div class="meter-pct" id="meterPct">0%</div>
+            <p
+              style="
+                text-align: center;
+                font-weight: 800;
+                opacity: 0.75;
+                font-size: 0.85rem;
+              "
+              id="meterLabel"
+            ></p>
+          </div>
+
+          <p
+            style="text-align: center; margin-top: 18px; font-size: 1.15rem"
+            class="script"
+          >
+            I can't wait to spend this day with you ❤️
+          </p>
+
+          <div class="nav-row">
+            <button class="btn-primary" id="toPolaroid">Continue →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 7 — POLAROID -->
+      <section class="screen" id="screen-polaroid">
+        <div class="content-max" style="text-align: center">
+          <div class="step-head">
+            <h2 class="step-title">A memory from the future</h2>
+          </div>
+          <div class="polaroid">
+            <div class="polaroid-photo">❤️</div>
+            <div class="polaroid-cap">Our First Date</div>
+            <div class="polaroid-sub" id="polaroidSub"></div>
+          </div>
+          <div class="nav-row">
+            <button class="btn-primary" id="toTicket">Get our ticket →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 8 — TICKET -->
+      <section class="screen" id="screen-ticket">
+        <div class="content-max" style="text-align: center">
+          <div class="step-head">
+            <h2 class="step-title">Your date ticket</h2>
+          </div>
+
+          <div id="ticketCapture">
+            <div class="ticket-main">
+              <div class="ticket-eyebrow">Date Ticket · Admit Two</div>
+              <div class="ticket-title">Our First Date ❤️</div>
+              <div class="ticket-row">
+                <span>Guest</span><b id="tk-guest">You</b>
+              </div>
+              <div class="ticket-row"><span>With</span><b>Me</b></div>
+              <div class="ticket-row">
+                <span>Food</span><b id="tk-food"></b>
+              </div>
+              <div class="ticket-row">
+                <span>Movie</span><b id="tk-movie"></b>
+              </div>
+              <div class="ticket-row">
+                <span>Showtime</span><b id="tk-time"></b>
+              </div>
+              <div class="ticket-row">
+                <span>Meet at</span><b id="tk-meet"></b>
+              </div>
+              <div class="ticket-row">
+                <span>Dress code</span><b id="tk-dress"></b>
+              </div>
+              <div class="ticket-status">CONFIRMED ❤️</div>
+            </div>
+            <div class="ticket-stub">
+              <div class="qr" id="qrHolder"></div>
+              <div class="stub-vert">DATE • CONFIRMED • ❤️</div>
+            </div>
+          </div>
+
+          <div class="nav-row">
+            <button class="btn-primary" id="downloadBtn">
+              ⬇ Download as PNG
+            </button>
+            <button class="btn-ghost" id="restartBtn">Start over</button>
+          </div>
+          <p style="opacity: 0.55; font-size: 0.8rem; margin-top: 14px">
+            Guest name defaults to "You" — edit the HTML to personalize it
+            before sending.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- CELEBRATION OVERLAY -->
+    <div id="celebration">
+      <div class="cele-heart">💖</div>
+      <div class="cele-text">Best decision ever ❤️</div>
+    </div>
+
+    <!-- TRAILER MODAL -->
+    <div class="modal-overlay" id="trailerModal">
+      <div class="modal-box">
+        <button class="modal-close" id="closeTrailer">✕</button>
+        <div id="trailerFrame"></div>
+      </div>
+    </div>
+
+    <!-- WHEEL MODAL -->
+    <div class="modal-overlay" id="wheelModal">
+      <div class="modal-box">
+        <button
+          class="modal-close"
+          id="closeWheel"
+          style="background: rgba(74, 46, 59, 0.4)"
+        >
+          ✕
+        </button>
+        <h3 style="margin-bottom: 6px">Can't decide?</h3>
+        <p style="opacity: 0.7; font-size: 0.85rem" id="wheelSubtitle">
+          Spin to pick for you
+        </p>
+        <div class="wheel-wrap">
+          <div class="wheel-pointer">🔻</div>
+          <canvas id="wheelCanvas" width="260" height="260"></canvas>
+        </div>
+        <button class="btn-primary" id="spinBtn">Spin the wheel</button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        /* ============================================================
+   ⚙️ CONFIG — edit these three lines yourself, nothing else
+   ============================================================
+   SUPABASE_URL / SUPABASE_ANON_KEY:
+     Supabase dashboard → your project → left sidebar "Project
+     Settings" (gear icon) → "API" → copy "Project URL" and the
+     "anon public" key. Paste them below as plain strings.
+     Leave them as empty strings to skip saving to a database
+     (the site still works fully, it just won't record answers).
+
+   BACKGROUND_MUSIC_URL:
+     A direct link to an audio file (.mp3/.m4a/.ogg — NOT a
+     YouTube page link, browsers can't play those directly).
+     Leave empty for no background music.
+   ============================================================ */
+        const CONFIG = {
+          SUPABASE_URL: "https://ixrowaadhwdgcspdljig.supabase.co",
+          SUPABASE_ANON_KEY:
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4cm93YWFkaHdkZ2NzcGRsamlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1ODY1MDgsImV4cCI6MjEwMTE2MjUwOH0.SGO24KrNtN5VqlwjhEdqVvlA45YRMc1CbS4FRvIU5Sk",
+          BACKGROUND_MUSIC_URL: "",
+        };
+
+        let supabaseClient = null;
+        if (
+          CONFIG.SUPABASE_URL &&
+          CONFIG.SUPABASE_ANON_KEY &&
+          window.supabase
+        ) {
+          try {
+            supabaseClient = window.supabase.createClient(
+              CONFIG.SUPABASE_URL,
+              CONFIG.SUPABASE_ANON_KEY,
+            );
+          } catch (e) {
+            console.warn("Supabase init failed:", e);
+          }
+        }
+
+        async function saveResponseToSupabase() {
+          if (!supabaseClient) return; // no keys configured — silently skip
+          try {
+            const ua = navigator.userAgent;
+            const device = /Mobi|Android|iPhone|iPad/i.test(ua)
+              ? "mobile"
+              : "desktop";
+            let browser = "unknown";
+            if (ua.includes("Chrome")) browser = "Chrome";
+            else if (ua.includes("Safari")) browser = "Safari";
+            else if (ua.includes("Firefox")) browser = "Firefox";
+            await supabaseClient.from("date_responses").insert([
+              {
+                accepted: true,
+                food: state.food,
+                movie: state.movie,
+                movie_time: state.movieTime,
+                recommended_meeting_time: state.meetTime,
+                dress_color: state.dressColor,
+                browser,
+                device,
+              },
+            ]);
+          } catch (e) {
+            console.warn("Could not save response to Supabase:", e);
+          }
+        }
+
+        /* ============================================================
+   STATE
+   ============================================================ */
+        const state = {
+          food: null,
+          movie: null,
+          movieTime: null,
+          dressColor: null,
+          meetTime: null,
+        };
+
+        const els = (id) => document.getElementById(id);
+
+        /* ============================================================
+   LOADING SCREEN
+   ============================================================ */
+        window.addEventListener("load", () => {
+          setTimeout(() => {
+            const l = els("loading");
+            l.style.opacity = "0";
+            setTimeout(() => (l.style.display = "none"), 650);
+          }, 900);
+        });
+
+        /* ============================================================
+   BACKGROUND FX — floating hearts + twinkling stars
+   ============================================================ */
+        const bgfx = els("bgfx");
+        const heartEmojis = ["❤️", "💕", "💗", "🩷", "✨"];
+        function spawnFloaty() {
+          const el = document.createElement("div");
+          el.className = "floaty";
+          el.textContent =
+            heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+          const size = 12 + Math.random() * 22;
+          el.style.left = Math.random() * 100 + "vw";
+          el.style.fontSize = size + "px";
+          el.style.setProperty("--s", (0.7 + Math.random() * 0.8).toFixed(2));
+          const dur = 10 + Math.random() * 10;
+          el.style.animationDuration = dur + "s";
+          bgfx.appendChild(el);
+          setTimeout(() => el.remove(), dur * 1000 + 500);
+        }
+        setInterval(spawnFloaty, 900);
+        for (let i = 0; i < 6; i++) setTimeout(spawnFloaty, i * 300);
+
+        function spawnStars() {
+          for (let i = 0; i < 40; i++) {
+            const s = document.createElement("div");
+            s.className = "star";
+            const size = 1.5 + Math.random() * 2.5;
+            s.style.width = size + "px";
+            s.style.height = size + "px";
+            s.style.left = Math.random() * 100 + "vw";
+            s.style.top = Math.random() * 100 + "vh";
+            s.style.animationDelay = Math.random() * 3 + "s";
+            bgfx.appendChild(s);
+          }
+        }
+        spawnStars();
+
+        /* ============================================================
+   THEME + MUTE TOGGLES
+   ============================================================ */
+        els("themeBtn").addEventListener("click", () => {
+          const body = document.body;
+          const dark = body.getAttribute("data-theme") === "dark";
+          body.setAttribute("data-theme", dark ? "light" : "dark");
+          els("themeBtn").textContent = dark ? "🌙" : "☀️";
+        });
+
+        let audioCtx = null,
+          muted = true; // starts muted — no autoplay audio without user gesture
+        function ensureAudio() {
+          if (!audioCtx) {
+            try {
+              audioCtx = new (
+                window.AudioContext || window.webkitAudioContext
+              )();
+            } catch (e) {
+              return;
+            }
+          }
+        }
+        function playChime(freqs = [880, 1108, 1318]) {
+          if (muted) return;
+          ensureAudio();
+          if (!audioCtx) return;
+          const now = audioCtx.currentTime;
+          freqs.forEach((f, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = "sine";
+            osc.frequency.value = f;
+            gain.gain.setValueAtTime(0, now + i * 0.12);
+            gain.gain.linearRampToValueAtTime(0.06, now + i * 0.12 + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + i * 0.12);
+            osc.stop(now + i * 0.12 + 0.55);
+          });
+        }
+
+        // Optional background music — only exists if CONFIG.BACKGROUND_MUSIC_URL is set
+        let bgMusic = null;
+        if (CONFIG.BACKGROUND_MUSIC_URL) {
+          bgMusic = new Audio(CONFIG.BACKGROUND_MUSIC_URL);
+          bgMusic.loop = true;
+          bgMusic.volume = 0.35;
+        }
+        els("muteBtn").addEventListener("click", () => {
+          muted = !muted;
+          els("muteBtn").textContent = muted ? "🔈" : "🔊";
+          if (!muted) {
+            ensureAudio();
+            playChime([660, 880]);
+            if (bgMusic)
+              bgMusic.play().catch(() => {
+                /* user gesture required, this click counts as one */
+              });
+          } else if (bgMusic) {
+            bgMusic.pause();
+          }
+        });
+
+        /* ============================================================
+   NO BUTTON — dodges the cursor, 50+ funny messages
+   ============================================================ */
+        const noMessages = [
+          "Are you sure? 🥺",
+          "Think again ❤️",
+          "Please don't break my heart.",
+          "Wrong answer 😂",
+          "Nice try.",
+          "You almost clicked it.",
+          "Today only YES is available.",
+          "The YES button looks lonely.",
+          "I already know your answer.",
+          "Please reconsider ❤️",
+          "This button is fake, I promise.",
+          "My heart says otherwise.",
+          "Not happening today 🙈",
+          "Access denied.",
+          "Try the other one!",
+          "Statistically, YES is better.",
+          "This button has trust issues.",
+          "404: NO not found.",
+          "I dodge because I care.",
+          "Catch me if you can 😏",
+          "Even the button is nervous.",
+          "Rethink this decision.",
+          "I believe in second chances… not this one.",
+          "Butterflies say no.",
+          "You'll thank me later.",
+          "One more try? Aim for YES.",
+          "This is my cardio.",
+          "The universe votes YES.",
+          "Come on, you know you want to.",
+          "I'm faster than your cursor.",
+          "This button retired.",
+          "Warning: heartbreak incoming.",
+          "Please, anything but that.",
+          "Let's not and say we did.",
+          "YES is right there, promise.",
+          "Beep boop, access restricted.",
+          "I have a good feeling about YES.",
+          "Almost! But no.",
+          "So close, yet so far.",
+          "This button believes in love.",
+          "Denied, with affection.",
+          "Try clicking YES instead — it works!",
+          "I'm ticklish, stop chasing me.",
+          "This is a safe space for YES only.",
+          "Plot twist: you say yes.",
+          "Reserved for someone who says yes.",
+          "Out of order (on purpose).",
+          "Nope, still dodging.",
+          "Give YES a chance.",
+          "I'll stop when you click YES.",
+          "This button is allergic to clicks.",
+          "Sorry, my legs are faster than yours.",
+          "I saw that coming 😏",
+          "Not today, cupid's orders.",
+          "One YES away from happy.",
+          "Keep trying, I'm entertained.",
+          "This is my favorite game.",
+          "Your persistence is cute though.",
+        ];
+        const noBtn = els("noBtn");
+        const noMsg = els("noMsg");
+        let noHideTimer = null;
+        function positionNoRandom() {
+          const pad = 24;
+          const w = window.innerWidth,
+            h = window.innerHeight;
+          const bw = noBtn.offsetWidth || 160,
+            bh = noBtn.offsetHeight || 56;
+          const x = pad + Math.random() * (w - bw - pad * 2);
+          const y = pad + Math.random() * (h - bh - pad * 2);
+          noBtn.style.left = x + "px";
+          noBtn.style.top = y + "px";
+          return { x, y, bw, bh };
+        }
+        function showNoMessage() {
+          const msg = noMessages[Math.floor(Math.random() * noMessages.length)];
+          noMsg.textContent = msg;
+          const r = noBtn.getBoundingClientRect();
+          noMsg.style.left = Math.max(8, r.left) + "px";
+          noMsg.style.top = Math.max(8, r.top - 40) + "px";
+          noMsg.classList.add("show");
+          clearTimeout(noHideTimer);
+          noHideTimer = setTimeout(() => noMsg.classList.remove("show"), 1600);
+        }
+        function dodge() {
+          positionNoRandom();
+          showNoMessage();
+        }
+        // dodge on approach (pointer move) + on click attempt + on touch
+        let lastDodge = 0;
+        document.addEventListener("pointermove", (e) => {
+          if (
+            !document.getElementById("screen-hero").classList.contains("active")
+          )
+            return;
+          const r = noBtn.getBoundingClientRect();
+          const cx = r.left + r.width / 2,
+            cy = r.top + r.height / 2;
+          const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+          if (dist < 110 && Date.now() - lastDodge > 180) {
+            lastDodge = Date.now();
+            dodge();
+          }
+        });
+        noBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          dodge();
+        });
+        noBtn.addEventListener(
+          "touchstart",
+          (e) => {
+            e.preventDefault();
+            dodge();
+          },
+          { passive: false },
+        );
+        // initial placement once hero shows
+        setTimeout(() => {
+          if (window.innerWidth > 0) positionNoRandom();
+        }, 300);
+        window.addEventListener("resize", () => {
+          if (
+            document.getElementById("screen-hero").classList.contains("active")
+          )
+            positionNoRandom();
+        });
+
+        /* ============================================================
+   YES BUTTON — ripple + celebration + confetti
+   ============================================================ */
+        els("yesBtn").addEventListener("click", function (e) {
+          const rect = this.getBoundingClientRect();
+          const ripple = document.createElement("span");
+          ripple.className = "ripple";
+          const size = Math.max(rect.width, rect.height);
+          ripple.style.width = ripple.style.height = size + "px";
+          ripple.style.left = e.clientX - rect.left - size / 2 + "px";
+          ripple.style.top = e.clientY - rect.top - size / 2 + "px";
+          this.appendChild(ripple);
+          setTimeout(() => ripple.remove(), 650);
+
+          els("flash").classList.add("go");
+          setTimeout(() => els("flash").classList.remove("go"), 550);
+
+          els("celebration").classList.add("show");
+          playChime([660, 880, 1108, 1318]);
+
+          fireConfettiBurst();
+
+          setTimeout(() => {
+            els("celebration").classList.remove("show");
+            goToScreen("screen-letter");
+          }, 1900);
+        });
+
+        function fireConfettiBurst() {
+          if (typeof confetti !== "function") return;
+          const colors = [
+            "#E8A6A0",
+            "#C9787B",
+            "#C9A15A",
+            "#FBF4EC",
+            "#E4C892",
+          ];
+          confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.6 },
+            colors,
+          });
+          setTimeout(
+            () =>
+              confetti({
+                particleCount: 80,
+                angle: 60,
+                spread: 70,
+                origin: { x: 0 },
+                colors,
+              }),
+            200,
+          );
+          setTimeout(
+            () =>
+              confetti({
+                particleCount: 80,
+                angle: 120,
+                spread: 70,
+                origin: { x: 1 },
+                colors,
+              }),
+            350,
+          );
+          // little heart shapes via shapes:['circle'] fallback bursts
+          setTimeout(
+            () =>
+              confetti({
+                particleCount: 60,
+                spread: 100,
+                origin: { y: 0.4 },
+                scalar: 1.2,
+                colors,
+              }),
+            550,
+          );
+        }
+
+        /* ============================================================
+   SCREEN NAVIGATION + TREASURE MAP PROGRESS
+   ============================================================ */
+        const flow = [
+          "screen-hero",
+          "screen-letter",
+          "screen-food",
+          "screen-movie",
+          "screen-time",
+          "screen-dress",
+          "screen-summary",
+          "screen-polaroid",
+          "screen-ticket",
+        ];
+        const progressSteps = [
+          { screen: "screen-letter", icon: "❤️", label: "Invite" },
+          { screen: "screen-food", icon: "🍽", label: "Food" },
+          { screen: "screen-movie", icon: "🎬", label: "Movie" },
+          { screen: "screen-dress", icon: "🎨", label: "Dress" },
+          { screen: "screen-ticket", icon: "🎟", label: "Ticket" },
+        ];
+        function renderProgress(activeScreen) {
+          const track = els("progressTrack");
+          track.innerHTML = "";
+          const activeIdx = progressSteps.findIndex(
+            (s) =>
+              s.screen === activeScreen ||
+              (activeScreen === "screen-time" && s.screen === "screen-movie") ||
+              (activeScreen === "screen-summary" &&
+                s.screen === "screen-dress") ||
+              (activeScreen === "screen-polaroid" &&
+                s.screen === "screen-dress"),
+          );
+          progressSteps.forEach((s, i) => {
+            const node = document.createElement("div");
+            node.className =
+              "p-node" +
+              (i < activeIdx ? " done" : "") +
+              (i === activeIdx ? " current" : "");
+            node.innerHTML = `<div class="p-dot">${s.icon}</div><div class="p-label">${s.label}</div>`;
+            track.appendChild(node);
+            if (i < progressSteps.length - 1) {
+              const line = document.createElement("div");
+              line.className = "p-line" + (i < activeIdx ? " done" : "");
+              track.appendChild(line);
+            }
+          });
+        }
+        function goToScreen(id) {
+          flow.forEach((s) => els(s).classList.remove("active"));
+          els(id).classList.add("active");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          if (id === "screen-hero") {
+            els("progressWrap").classList.remove("show");
+            document.body.classList.remove("has-progress");
+          } else {
+            els("progressWrap").classList.add("show");
+            document.body.classList.add("has-progress");
+            renderProgress(id);
+          }
+        }
+
+        /* ============================================================
+   ENVELOPE
+   ============================================================ */
+        const envelope = els("envelope");
+        let envOpened = false;
+        envelope.addEventListener("click", () => {
+          if (envOpened) return;
+          envOpened = true;
+          envelope.classList.add("open");
+          playChime([784, 988]);
+          els("envHint").style.display = "none";
+          setTimeout(() => {
+            els("letterNav").style.display = "flex";
+          }, 700);
+        });
+        els("toPlanBtn").addEventListener("click", () =>
+          goToScreen("screen-food"),
+        );
+
+        /* ============================================================
+   STEP 1 — FOOD
+   ============================================================ */
+        const foods = [
+          {
+            id: "mongolian",
+            flag: "🇲🇳",
+            name: "Mongolian",
+            desc: "Buuz, khorkhog & a warm, familiar table",
+          },
+          {
+            id: "japanese",
+            flag: "🇯🇵",
+            name: "Japanese",
+            desc: "Sushi, ramen and quiet, cozy corners",
+          },
+          {
+            id: "korean",
+            flag: "🇰🇷",
+            name: "Korean",
+            desc: "BBQ, banchan and a little bit of fire",
+          },
+          {
+            id: "italian",
+            flag: "🇮🇹",
+            name: "Italian",
+            desc: "Candlelight, pasta, slow conversation",
+          },
+          {
+            id: "mexican",
+            flag: "🇲🇽",
+            name: "Mexican",
+            desc: "Tacos, colour, and good energy",
+          },
+        ];
+        const foodGrid = els("foodGrid");
+        foods.forEach((f) => {
+          const card = document.createElement("button");
+          card.className = "choice-card";
+          card.setAttribute("type", "button");
+          card.innerHTML = `<span class="card-flag">${f.flag}</span><div class="card-title">${f.name}</div><div class="card-sub">${f.desc}</div>`;
+          card.addEventListener("click", () => {
+            [...foodGrid.children].forEach((c) =>
+              c.classList.remove("selected"),
+            );
+            card.classList.add("selected");
+            state.food = f.name;
+            els("foodNext").disabled = false;
+            playChime([740]);
+          });
+          foodGrid.appendChild(card);
+        });
+        els("foodNext").addEventListener("click", () =>
+          goToScreen("screen-movie"),
+        );
+
+        /* ============================================================
+   STEP 2 — MOVIE (with YouTube trailer embeds)
+   ============================================================ */
+        const movies = [
+          {
+            id: "odyssey",
+            name: "The Odyssey",
+            poster: "p1",
+            meta: "Epic · In theatres now",
+            desc: "A mythic voyage home across storms, monsters and memory — big-screen, big-feeling cinema.",
+            yt: "Mzw2ttJD2qQ",
+          },
+          {
+            id: "spiderman",
+            name: "Spider-Man: Brand New Day",
+            poster: "p2",
+            meta: "Action · In theatres now",
+            desc: "Peter Parker starts over in a world that's moved on without him — heart, humour and web-slinging.",
+            yt: "TFM19lZlDhQ",
+          },
+          {
+            id: "toystory",
+            name: "Toy Story 5",
+            poster: "p3",
+            meta: "Animation · In theatres now",
+            desc: "Woody, Buzz and the gang face their biggest rival yet: a shiny new tablet named Lilypad.",
+            yt: "pGJgpmGxn40",
+          },
+        ];
+        const movieGrid = els("movieGrid");
+        movies.forEach((m) => {
+          const card = document.createElement("div");
+          card.className = "movie-card";
+          card.innerHTML = `
+    <div class="poster ${m.poster}"><div class="poster-glow"></div><span>${m.name}</span></div>
+    <div class="movie-body">
+      <div class="movie-name">${m.name}</div>
+      <div class="movie-meta">${m.meta}</div>
+      <div class="movie-desc">${m.desc}</div>
+      <button type="button" class="trailer-btn" data-yt="${m.yt}">▶ Watch trailer</button>
+    </div>`;
+          card.addEventListener("click", (e) => {
+            if (e.target.closest(".trailer-btn")) return;
+            [...movieGrid.children].forEach((c) =>
+              c.classList.remove("selected"),
+            );
+            card.classList.add("selected");
+            state.movie = m.name;
+            els("movieNext").disabled = false;
+            playChime([740]);
+          });
+          card.querySelector(".trailer-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            openTrailer(m.yt);
+          });
+          movieGrid.appendChild(card);
+        });
+        function openTrailer(ytId) {
+          els("trailerFrame").innerHTML =
+            `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1" title="Trailer" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+          els("trailerModal").classList.add("show");
+        }
+        els("closeTrailer").addEventListener("click", () => {
+          els("trailerModal").classList.remove("show");
+          els("trailerFrame").innerHTML = "";
+        });
+        els("trailerModal").addEventListener("click", (e) => {
+          if (e.target === els("trailerModal")) els("closeTrailer").click();
+        });
+        els("movieBack").addEventListener("click", () =>
+          goToScreen("screen-food"),
+        );
+        els("movieNext").addEventListener("click", () =>
+          goToScreen("screen-time"),
+        );
+
+        /* ============================================================
+   STEP 3 — MOVIE TIME + auto meeting time calc
+   ============================================================ */
+        const times = ["13:00", "15:30", "18:00", "20:30"];
+        const timeGrid = els("timeGrid");
+        times.forEach((t) => {
+          const pill = document.createElement("button");
+          pill.className = "time-pill";
+          pill.type = "button";
+          pill.textContent = t;
+          pill.addEventListener("click", () => selectTime(t, pill));
+          timeGrid.appendChild(pill);
+        });
+        function to12h(hh, mm) {
+          const period = hh >= 12 ? "PM" : "AM";
+          let h12 = hh % 12;
+          if (h12 === 0) h12 = 12;
+          return `${h12}:${String(mm).padStart(2, "0")} ${period}`;
+        }
+        function selectTime(t, pillEl) {
+          [...timeGrid.children].forEach((c) => c.classList.remove("selected"));
+          if (pillEl) pillEl.classList.add("selected");
+          else {
+            const idx = times.indexOf(t);
+            if (idx > -1) timeGrid.children[idx].classList.add("selected");
+          }
+          state.movieTime = t;
+          const [hh, mm] = t.split(":").map(Number);
+          let meetH = hh - 2,
+            meetM = mm;
+          if (meetH < 0) meetH += 24;
+          state.meetTime = to12h(meetH, meetM);
+          els("meetTimeText").textContent = state.meetTime + " ❤️";
+          els("meetBox").style.display = "block";
+          els("timeNext").disabled = false;
+          playChime([740]);
+        }
+        els("timeBack").addEventListener("click", () =>
+          goToScreen("screen-movie"),
+        );
+        els("timeNext").addEventListener("click", () =>
+          goToScreen("screen-dress"),
+        );
+
+        /* ============================================================
+   LUCKY WHEEL — generic, reused for Food and Movie steps
+   ============================================================ */
+        const wheelColors = [
+          "#E8A6A0",
+          "#C9A15A",
+          "#4A2E3B",
+          "#F3E7DA",
+          "#8B5E3C",
+        ];
+        let wheelLabels = [];
+        let wheelOnPick = null;
+        let spinning = false;
+
+        function openWheel(labels, subtitleText, onPick) {
+          if (spinning) return;
+          wheelLabels = labels;
+          wheelOnPick = onPick;
+          els("wheelSubtitle").textContent = subtitleText;
+          drawWheel(wheelLabels);
+          const canvas = els("wheelCanvas");
+          canvas.style.transition = "none";
+          canvas.style.transform = "rotate(0deg)";
+          void canvas.offsetWidth;
+          canvas.style.transition = "transform 4s cubic-bezier(.15,.85,.35,1)";
+          els("wheelModal").classList.add("show");
+        }
+        els("closeWheel").addEventListener("click", () =>
+          els("wheelModal").classList.remove("show"),
+        );
+        els("wheelModal").addEventListener("click", (e) => {
+          if (e.target === els("wheelModal")) els("closeWheel").click();
+        });
+
+        function drawWheel(labels) {
+          const canvas = els("wheelCanvas");
+          const ctx = canvas.getContext("2d");
+          const n = labels.length;
+          const r = canvas.width / 2;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          for (let i = 0; i < n; i++) {
+            const start = (i / n) * Math.PI * 2,
+              end = ((i + 1) / n) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(r, r);
+            ctx.arc(r, r, r, start, end);
+            ctx.fillStyle = wheelColors[i % wheelColors.length];
+            ctx.fill();
+            ctx.save();
+            ctx.translate(r, r);
+            ctx.rotate(start + (end - start) / 2);
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 13px Manrope, sans-serif";
+            ctx.textAlign = "right";
+            ctx.fillText(
+              labels[i].length > 14 ? labels[i].slice(0, 13) + "…" : labels[i],
+              r - 16,
+              5,
+            );
+            ctx.restore();
+          }
+        }
+        els("spinBtn").addEventListener("click", () => {
+          if (spinning || !wheelLabels.length) return;
+          spinning = true;
+          const canvas = els("wheelCanvas");
+          const n = wheelLabels.length;
+          const winnerIdx = Math.floor(Math.random() * n);
+          const segAngle = 360 / n;
+          const winnerCenterAngle = winnerIdx * segAngle + segAngle / 2; // angle of segment center, 0deg = 3 o'clock, clockwise
+          const pointerAngle = 270; // the pointer sits at the top of the wheel = 12 o'clock = 270deg in canvas terms
+          const jitter = Math.random() * (segAngle * 0.4) - segAngle * 0.2; // stay safely inside the winning wedge
+          const baseRotation =
+            (((pointerAngle - winnerCenterAngle) % 360) + 360) % 360;
+          const targetDeg = 360 * 6 + baseRotation + jitter;
+          canvas.style.transform = `rotate(${targetDeg}deg)`;
+          setTimeout(() => {
+            if (wheelOnPick) wheelOnPick(winnerIdx);
+            spinning = false;
+            fireConfettiBurst();
+            setTimeout(() => els("wheelModal").classList.remove("show"), 700);
+          }, 4100);
+        });
+
+        els("foodLuckyBtn").addEventListener("click", () => {
+          openWheel(
+            foods.map((f) => f.name),
+            "Spin to pick tonight's food",
+            (idx) => {
+              foodGrid.children[idx].click();
+            },
+          );
+        });
+        els("movieLuckyBtn").addEventListener("click", () => {
+          openWheel(
+            movies.map((m) => m.name),
+            "Spin to pick tonight's movie",
+            (idx) => {
+              movieGrid.children[idx].click();
+            },
+          );
+        });
+
+        /* ============================================================
+   STEP 4 — DRESS CODE
+   ============================================================ */
+        const dressColors = [
+          { name: "Black", hex: "#2B2B2B" },
+          { name: "White", hex: "#FAFAFA" },
+          { name: "Blue", hex: "#5B7FA6" },
+          { name: "Brown", hex: "#8B5E3C" },
+          { name: "Gray", hex: "#9B9B9B" },
+          { name: "Beige", hex: "#D9C7A9" },
+          { name: "Green", hex: "#6B8E63" },
+          { name: "Pink", hex: "#E8A6A0" },
+        ];
+        const dressGrid = els("dressGrid");
+        dressColors.forEach((c) => {
+          const card = document.createElement("button");
+          card.type = "button";
+          card.className = "color-card";
+          card.innerHTML = `<div class="swatch" style="background:${c.hex};"></div><div class="card-title" style="font-size:.85rem;">${c.name}</div>`;
+          card.addEventListener("click", () => {
+            [...dressGrid.children].forEach((x) =>
+              x.classList.remove("selected"),
+            );
+            card.classList.add("selected");
+            state.dressColor = c.name;
+            els("dressNext").disabled = false;
+            playChime([740]);
+          });
+          dressGrid.appendChild(card);
+        });
+        els("dressBack").addEventListener("click", () =>
+          goToScreen("screen-time"),
+        );
+        els("dressNext").addEventListener("click", () => {
+          buildSummary();
+          goToScreen("screen-summary");
+          setTimeout(animateMeter, 350);
+        });
+
+        /* ============================================================
+   SUMMARY + LOVE METER
+   ============================================================ */
+        function buildSummary() {
+          const items = [
+            ["Food", state.food],
+            ["Movie", state.movie],
+            ["Showtime", state.movieTime],
+            ["Meet at", state.meetTime],
+            ["Dress colour", state.dressColor],
+          ];
+          els("summaryGrid").innerHTML = items
+            .map(
+              ([l, v]) => `
+    <div class="sum-item"><div class="sum-label">${l}</div><div class="sum-value">${v || "—"}</div></div>
+  `,
+            )
+            .join("");
+        }
+        function animateMeter() {
+          els("meterFill").style.width = "100%";
+          let n = 0;
+          const pctEl = els("meterPct");
+          const iv = setInterval(() => {
+            n += 4;
+            if (n >= 100) {
+              n = 100;
+              clearInterval(iv);
+            }
+            pctEl.textContent = n + "%";
+          }, 2200 / 25);
+          els("meterLabel").textContent = "Perfect Match ❤️";
+        }
+        els("toPolaroid").addEventListener("click", () => {
+          els("polaroidSub").textContent =
+            `${state.movie} · ${state.food} · wearing ${state.dressColor}`;
+          goToScreen("screen-polaroid");
+        });
+
+        /* ============================================================
+   TICKET + QR CODE + PNG DOWNLOAD
+   ============================================================ */
+        els("toTicket").addEventListener("click", () => {
+          els("tk-food").textContent = state.food || "—";
+          els("tk-movie").textContent = state.movie || "—";
+          els("tk-time").textContent = state.movieTime || "—";
+          els("tk-meet").textContent = state.meetTime || "—";
+          els("tk-dress").textContent = state.dressColor || "—";
+          goToScreen("screen-ticket");
+          buildQR();
+          saveResponseToSupabase();
+          setTimeout(fireConfettiBurst, 300);
+        });
+
+        function buildQR() {
+          const holder = els("qrHolder");
+          holder.innerHTML = "";
+          const payload = JSON.stringify({
+            event: "First Date",
+            food: state.food,
+            movie: state.movie,
+            time: state.movieTime,
+            meet: state.meetTime,
+            dress: state.dressColor,
+            status: "CONFIRMED",
+          });
+          const canvas = document.createElement("canvas");
+          holder.appendChild(canvas);
+          if (window.QRCode && QRCode.toCanvas) {
+            QRCode.toCanvas(
+              canvas,
+              payload,
+              {
+                width: 96,
+                margin: 1,
+                color: { dark: "#3A2A2E", light: "#FFFFFF" },
+              },
+              function (err) {
+                if (err) holder.textContent = "❤️";
+              },
+            );
+          } else {
+            holder.textContent = "❤️";
+          }
+        }
+
+        els("downloadBtn").addEventListener("click", () => {
+          const node = els("ticketCapture");
+          if (!window.html2canvas) {
+            alert("Download library failed to load — check your connection.");
+            return;
+          }
+          html2canvas(node, { backgroundColor: null, scale: 2 }).then(
+            (canvas) => {
+              const link = document.createElement("a");
+              link.download = "our-date-ticket.png";
+              link.href = canvas.toDataURL("image/png");
+              link.click();
+            },
+          );
+        });
+
+        els("restartBtn").addEventListener("click", () => {
+          if (!confirm("Start the invitation over from the beginning?")) return;
+          Object.keys(state).forEach((k) => (state[k] = null));
+          [
+            ...foodGrid.children,
+            ...movieGrid.children,
+            ...timeGrid.children,
+            ...dressGrid.children,
+          ].forEach((c) => c.classList.remove("selected"));
+          ["foodNext", "movieNext", "timeNext", "dressNext"].forEach(
+            (id) => (els(id).disabled = true),
+          );
+          els("meetBox").style.display = "none";
+          envOpened = false;
+          envelope.classList.remove("open");
+          els("envHint").style.display = "block";
+          els("letterNav").style.display = "none";
+          goToScreen("screen-hero");
+        });
+      })();
+    </script>
+  </body>
+</html>
