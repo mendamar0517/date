@@ -2291,8 +2291,11 @@
           dateTime: null,
           dressColor: null,
           ticketId: null,
+          qrPayload: null,
         };
         const els = (id) => document.getElementById(id);
+        const isTouchDevice =
+          window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
 
         async function saveTicketToSupabase() {
           if (!supabaseClient) return null;
@@ -3318,6 +3321,12 @@
                   meetingPlace: "I'll tell you later",
                   status: "CONFIRMED",
                 });
+          state.qrPayload = payload;
+          const qrLink = document.createElement("a");
+          qrLink.href = payload;
+          qrLink.target = "_blank";
+          qrLink.rel = "noopener noreferrer";
+          qrLink.setAttribute("aria-label", "Open the linked ticket URL");
           function showQRFallback() {
             holder.innerHTML = "";
             const img = document.createElement("img");
@@ -3329,7 +3338,8 @@
             img.onerror = () => {
               holder.innerHTML = '<div class="qr-note">QR needs internet</div>';
             };
-            holder.appendChild(img);
+            qrLink.appendChild(img);
+            holder.appendChild(qrLink);
           }
           if (window.QRCode && QRCode.toCanvas) {
             QRCode.toDataURL(
@@ -3347,7 +3357,8 @@
                 const img = document.createElement("img");
                 img.alt = "Date ticket QR code";
                 img.src = url;
-                holder.appendChild(img);
+                qrLink.appendChild(img);
+                holder.appendChild(qrLink);
               },
             );
           } else {
@@ -3355,6 +3366,10 @@
           }
         }
         els("downloadBtn").addEventListener("click", () => {
+          if (isTouchDevice && state.qrPayload) {
+            window.open(state.qrPayload, "_blank", "noopener,noreferrer");
+            return;
+          }
           const node = els("ticketCapture");
           if (!window.html2canvas) {
             alert("Download library failed to load — check your connection.");
