@@ -1933,14 +1933,6 @@
       >
         🔊
       </button>
-      <button
-        class="pill-btn"
-        id="themeBtn"
-        aria-label="Toggle dark mode"
-        title="Toggle dark mode"
-      >
-        🌙
-      </button>
     </div>
 
     <div id="progressWrap">
@@ -1983,6 +1975,7 @@
               <div class="env-back"></div>
               <div class="env-letter">
                 <div>
+                  <p>The real life starts depending on whom did you meet</p>
                   <p>This isn't just any date.</p>
                   <p>I've been looking forward to sharing this day with you.</p>
                   <p class="sign">Let's plan it together.</p>
@@ -2390,14 +2383,6 @@
           }
         }
         spawnStars();
-
-        /* ============================================================ THEME */
-        els("themeBtn").addEventListener("click", () => {
-          const body = document.body;
-          const dark = body.getAttribute("data-theme") === "dark";
-          body.setAttribute("data-theme", dark ? "light" : "dark");
-          els("themeBtn").textContent = dark ? "🌙" : "☀️";
-        });
 
         /* ============================================================ MASCOT — original chibi cat, built as inline SVG */
         function mascotSVG() {
@@ -3392,14 +3377,15 @@
             link.href = dataUrl;
             link.rel = "noopener noreferrer";
             if (isTouchDevice) {
-              const win = window.open(dataUrl, "_blank", "noopener,noreferrer");
-              if (!win) {
-                link.target = "_blank";
-                link.click();
-              }
+              link.target = "_blank";
+              document.body.appendChild(link);
+              link.click();
+              setTimeout(() => link.remove(), 150);
               return;
             }
+            document.body.appendChild(link);
             link.click();
+            setTimeout(() => link.remove(), 150);
           });
         });
         els("restartBtn").addEventListener("click", () => {
