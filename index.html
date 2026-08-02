@@ -3168,7 +3168,17 @@
           colorHexInput.value = hex;
           playChime([740]);
         }
-        colorPreviewBtn.addEventListener("click", () => colorNative.click());
+        colorPreviewBtn.addEventListener("click", () => {
+          if (typeof colorNative.showPicker === "function") {
+            try {
+              colorNative.showPicker();
+            } catch (e) {
+              colorNative.click();
+            }
+          } else {
+            colorNative.click();
+          }
+        });
         colorNative.addEventListener("input", () =>
           setDressColor(colorNative.value),
         );
@@ -3366,10 +3376,6 @@
           }
         }
         els("downloadBtn").addEventListener("click", () => {
-          if (isTouchDevice && state.qrPayload) {
-            window.open(state.qrPayload, "_blank", "noopener,noreferrer");
-            return;
-          }
           const node = els("ticketCapture");
           if (!window.html2canvas) {
             alert("Download library failed to load — check your connection.");
@@ -3380,9 +3386,19 @@
             scale: 2,
             useCORS: true,
           }).then((canvas) => {
+            const dataUrl = canvas.toDataURL("image/png");
             const link = document.createElement("a");
             link.download = "our-date-ticket.png";
-            link.href = canvas.toDataURL("image/png");
+            link.href = dataUrl;
+            link.rel = "noopener noreferrer";
+            if (isTouchDevice) {
+              const win = window.open(dataUrl, "_blank", "noopener,noreferrer");
+              if (!win) {
+                link.target = "_blank";
+                link.click();
+              }
+              return;
+            }
             link.click();
           });
         });
