@@ -1116,6 +1116,23 @@
         font-size: 0.95rem;
         transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
+      .ticket-btn-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .ticket-btn-icon {
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .ticket-btn-icon svg {
+        width: 100%;
+        height: 100%;
+      }
       .btn-primary {
         background: linear-gradient(135deg, var(--rose), var(--rose-deep));
         color: #fff;
@@ -2231,8 +2248,12 @@
           ></p>
           <div class="nav-row">
             <button class="btn-primary" id="downloadBtn">
-              ⬇ Download as PNG</button
-            ><button class="btn-ghost" id="restartBtn">Start over</button>
+              <span class="ticket-btn-wrap">
+                <span class="ticket-btn-icon" id="downloadTicketIcon" aria-hidden="true"></span>
+                <span>Download ticket</span>
+              </span>
+            </button>
+            <button class="btn-ghost" id="restartBtn">Start over</button>
           </div>
         </div>
       </section>
@@ -2488,6 +2509,9 @@
         mountMascot("mascotCelebration", "celebrate");
         mountMascot("mascotTicket", "idle");
         mountMascot("mascotFloatWrap", "idle");
+        if (els("downloadTicketIcon")) {
+          els("downloadTicketIcon").innerHTML = mascotSVG();
+        }
 
         // little mascot guide that briefly appears between pages
         let mascotFloatTimer = null;
