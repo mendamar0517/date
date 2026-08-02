@@ -1941,11 +1941,11 @@
     <div class="topbar">
       <button
         class="pill-btn"
-        id="muteBtn"
-        aria-label="Toggle music"
-        title="Toggle music"
+        id="themeBtn"
+        aria-label="Toggle dark mode"
+        title="Toggle dark mode"
       >
-        🔊
+        🌙
       </button>
     </div>
 
@@ -2398,6 +2398,14 @@
         }
         spawnStars();
 
+        /* ============================================================ THEME */
+        els("themeBtn").addEventListener("click", () => {
+          const body = document.body;
+          const dark = body.getAttribute("data-theme") === "dark";
+          body.setAttribute("data-theme", dark ? "light" : "dark");
+          els("themeBtn").textContent = dark ? "🌙" : "☀️";
+        });
+
         /* ============================================================ MASCOT — original chibi cat, built as inline SVG */
         function mascotSVG() {
           return `
@@ -2547,7 +2555,7 @@
             .play()
             .then(() => fadeAudioTo(bgMusic, bgTargetVolume, 1400))
             .catch(() => {
-              /* mobile browsers may still block until a real gesture — muteBtn click covers this */
+              /* mobile browsers may still block until a real gesture */
             });
         }
         function handleFirstInteraction() {
@@ -2562,18 +2570,6 @@
             passive: true,
           }),
         );
-        els("muteBtn").addEventListener("click", () => {
-          muted = !muted;
-          els("muteBtn").textContent = muted ? "🔈" : "🔊";
-          if (!muted) {
-            ensureAudio();
-            playChime([660, 880]);
-            startBackgroundMusicIfNeeded();
-          } else if (bgMusic) {
-            fadeAudioTo(bgMusic, 0, 500);
-            setTimeout(() => bgMusic && bgMusic.pause(), 550);
-          }
-        });
 
         /* ============================================================ NO BUTTON — fixed side-by-side start, dodges only after interaction, 11-stage script */
         const noStageMessages = [
