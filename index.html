@@ -1036,11 +1036,27 @@
         transform: scale(1.06);
       }
       #colorNative {
-        position: absolute;
-        opacity: 0;
-        width: 1px;
-        height: 1px;
-        pointer-events: none;
+        width: 58px;
+        height: 58px;
+        padding: 0;
+        border: 3px solid var(--white);
+        border-radius: 14px;
+        background: transparent;
+        box-shadow: 0 8px 22px rgba(74, 46, 59, 0.18);
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+      #colorNative::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+      #colorNative::-webkit-color-swatch {
+        border: none;
+        border-radius: 10px;
+      }
+      #colorNative::-moz-color-swatch {
+        border: none;
+        border-radius: 10px;
       }
       .hex-input {
         padding: 14px 16px;
@@ -1902,6 +1918,14 @@
           top: 36%;
           width: 42px;
           height: 42px;
+        }
+        .color-preview-btn {
+          width: 72px;
+          height: 72px;
+        }
+        #colorNative {
+          width: 72px;
+          height: 72px;
         }
         #ticketCapture {
           flex-direction: column;
